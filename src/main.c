@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 #include <GL/glew.h>
 #include <GL/gl.h>
 #include <GLFW/glfw3.h>
@@ -96,23 +97,6 @@ void draw_quad(GLFWwindow *window) {
 
 }
 
-void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods) {
-
-	if(key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
-		glfwSetWindowShouldClose(window, GLFW_TRUE);
-	}
-
-}
-
-void init(GLFWwindow *window) {
-
-	glfwMakeContextCurrent(window);
-	glfwSetKeyCallback(window, key_callback);
-	glfwSwapInterval(1);
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-
-}
-
 GLFWwindow* create_window() {
 
 	GLFWmonitor *monitor = glfwGetPrimaryMonitor();
@@ -128,7 +112,6 @@ GLFWwindow* create_window() {
 void setup_glfw(GLFWwindow *window) {
 
 	glfwMakeContextCurrent(window);
-	glfwSetKeyCallback(window, key_callback);
 	glfwSwapInterval(1);
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
@@ -150,6 +133,61 @@ void setup_glew() {
 
 }
 
+void handle_input(GLFWwindow* window, double* camera_position, double* camera_direction, double* last_mouse_position) {
+
+	// Quit on esc
+	if(glfwGetKey(window, GLFW_KEY_ESCAPE)) {
+		glfwSetWindowShouldClose(window, GLFW_TRUE);
+	}
+
+
+	const double camera_speed = 0.05;
+	const double mouse_sensitivity = 0.005;
+
+	double move_vector[] = {0.0, 0.0};
+
+	// Handle key inputs
+	if(glfwGetKey(window, GLFW_KEY_W)) {
+		move_vector[1] += 1.0;
+	}
+	if(glfwGetKey(window, GLFW_KEY_A)) {
+		move_vector[0] -= 1.0;
+	}
+	if(glfwGetKey(window, GLFW_KEY_S)) {
+		move_vector[1] -= 1.0;
+	}
+	if(glfwGetKey(window, GLFW_KEY_D)) {
+		move_vector[0] += 1.0;
+	}
+
+	// Normalize move vector
+	double move_magnitude = sqrt(move_vector[0]*move_vector[0] + move_vector[1]*move_vector[1]);
+	if(move_magnitude > 0) {
+		move_vector[0] *= camera_speed / move_magnitude;
+		move_vector[1] *= camera_speed / move_magnitude;
+	}
+
+	// Update camera position
+	camera_position[0] += move_vector[0];
+	camera_position[2] += move_vector[1];
+
+	// Handle mouse inputs
+	double current_mouse_position[2];
+	glfwGetCursorPos(window, &current_mouse_position[0], &current_mouse_position[1]);
+
+	double mouse_position_difference[] = {
+		current_mouse_position[0] - last_mouse_position[0], 
+		current_mouse_position[1] - last_mouse_position[1]
+	};
+	
+	camera_direction[0] -= mouse_sensitivity * mouse_position_difference[0];
+
+	
+
+
+
+}
+
 int main(int argc, char **argv) {
 
 	if(!glfwInit()) {
@@ -160,8 +198,9 @@ int main(int argc, char **argv) {
 	setup_glfw(window);
 	setup_glew();
 
-	GLuint shader_program = create_shader_program("../src/vertex_shader.glsl", "../src/fragment_shader.glsl");
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
+	GLuint shader_program = create_shader_program("../src/vertex_shader.glsl", "../src/fragment_shader.glsl");
 
 	float vertices[] = {
 		1.0f, -1.0f, 0.0f,
@@ -196,12 +235,26 @@ int main(int argc, char **argv) {
 	GLint resolution_location = glGetUniformLocation(shader_program, "resolution");
 	glUniform2f(resolution_location, 1920.0f, 1080.0f);
 
-	float time = 0.0f;
+	double time = 0.0f;
+	double camera_position[] = {0.0, 1.0, 0.0}; 
+	double camera_direction[] = {0.0, 0.0};
+	double last_mouse_position[2];
+	glfwGetCursorPos(window, &last_mouse_position[0], &last_mouse_position[1]);
+
 	while (!glfwWindowShouldClose(window)) {
 
 		GLint time_location = glGetUniformLocation(shader_program, "time");
 		glUniform1f(time_location, time);
 		time += 0.01;
+
+		GLint camera_position_location = glGetUniformLocation(shader_program, "camera_position");
+		glUniform3f(camera_position_location, camera_position[0], camera_position[1], camera_position[2]);
+
+		GLint camera_direction_location = glGetUniformLocation(shader_program, "camera_direction");
+		glUniform2f(camera_direction_location, camera_direction[0], camera_direction[1]);
+
+		handle_input(window, camera_position, camera_direction, last_mouse_position);
+		glfwGetCursorPos(window, &last_mouse_position[0], &last_mouse_position[1]);
 
 		glBindVertexArray(VAO);
 

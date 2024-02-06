@@ -15,4 +15,9 @@ target_include_directories(out PRIVATE
     ${GLFW_INCLUDE_DIRS}
 )
 
-target_link_libraries(out PRIVATE glfw GLEW::GLEW ${OPENGL_LIBRARIES})
+target_link_libraries(out PRIVATE 
+	glfw 
+	GLEW::GLEW 
+	m
+	${OPENGL_LIBRARIES}
+)

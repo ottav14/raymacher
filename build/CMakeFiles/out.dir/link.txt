@@ -1,1 +1,1 @@
-/usr/bin/cc CMakeFiles/out.dir/src/main.c.o -o out  /usr/lib/libglfw.so.3.3 /usr/lib/libGLEW.so /usr/lib/libGL.so /usr/lib/libGLU.so 
+/usr/bin/cc CMakeFiles/out.dir/src/main.c.o -o out  /usr/lib/libglfw.so.3.3 /usr/lib/libGLEW.so -lm /usr/lib/libGL.so /usr/lib/libGLU.so 
