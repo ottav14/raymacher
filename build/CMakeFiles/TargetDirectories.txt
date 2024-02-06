@@ -1,0 +1,3 @@
+/home/dom/projects/ray_marcher/build/CMakeFiles/out.dir
+/home/dom/projects/ray_marcher/build/CMakeFiles/edit_cache.dir
+/home/dom/projects/ray_marcher/build/CMakeFiles/rebuild_cache.dir
